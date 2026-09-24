@@ -16,11 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export { CTA } from './sections/cta'
-export { Community } from './sections/community'
-export { Faq } from './sections/faq'
-export { Features } from './sections/features'
-export { Hero } from './sections/hero'
-export { HowItWorks } from './sections/how-it-works'
-export { ModelGallery } from './sections/model-gallery'
-export { Stats } from './sections/stats'
+import { createFileRoute } from '@tanstack/react-router'
+
+import { Faq } from '@/features/faq'
+
+export const Route = createFileRoute('/faq/')({
+  component: Faq,
+})

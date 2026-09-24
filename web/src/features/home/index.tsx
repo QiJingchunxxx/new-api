@@ -26,8 +26,17 @@ import { useTheme } from '@/context/theme-provider'
 import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
-import { CTA, Features, Hero, HowItWorks, Stats } from './components'
-import { useHomePageContent } from './hooks'
+import {
+  CTA,
+  Community,
+  Faq,
+  Features,
+  Hero,
+  HowItWorks,
+  ModelGallery,
+  Stats,
+} from './components'
+import { useHomeLanding, useHomePageContent } from './hooks'
 
 export function Home() {
   const { i18n, t } = useTranslation()
@@ -36,6 +45,7 @@ export function Home() {
   const { auth } = useAuthStore()
   const isAuthenticated = !!auth.user
   const { content, isLoaded, isUrl } = useHomePageContent()
+  const landing = useHomeLanding()
 
   const syncIframePreferences = useCallback(() => {
     try {
@@ -120,12 +130,46 @@ export function Home() {
     )
   }
 
+  const showStats = landing?.stats.enabled ?? true
+  const showModels = landing?.models.enabled ?? true
+  const showFaq = landing?.faq.enabled ?? true
+  const showCommunity = landing?.community.enabled ?? true
+
   return (
     <PublicLayout showMainContainer={false}>
-      <Hero isAuthenticated={isAuthenticated} />
-      <Stats />
-      <Features />
+      <Hero isAuthenticated={isAuthenticated} config={landing?.hero} />
+      {showStats ? (
+        <Stats
+          title={landing?.stats.title}
+          subtitle={landing?.stats.subtitle}
+          items={landing?.stats.items}
+        />
+      ) : null}
+      {showModels ? (
+        <ModelGallery
+          title={landing?.models.title}
+          subtitle={landing?.models.subtitle}
+          limit={landing?.models.limit}
+          groups={landing?.models.groups}
+        />
+      ) : null}
       <HowItWorks />
+      <Features />
+      {showFaq ? (
+        <Faq
+          title={landing?.faq.title}
+          subtitle={landing?.faq.subtitle}
+          items={landing?.faq.items}
+        />
+      ) : null}
+      {showCommunity ? (
+        <Community
+          title={landing?.community.title}
+          desc={landing?.community.desc}
+          links={landing?.community.links}
+          qrCodes={landing?.community.qr_codes}
+        />
+      ) : null}
       <CTA isAuthenticated={isAuthenticated} />
       <Footer />
     </PublicLayout>

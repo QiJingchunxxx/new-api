@@ -1,14 +1,32 @@
 # New-API Docker Compose Configuration
-# 
-# Quick Start:
-#   1. docker-compose up -d
-#   2. Access at http://localhost:3000
+#
+# 这是二次开发分支的部署文件：new-api 使用本仓库源码产出的镜像，不会拉取官方镜像。
+#
+# 两种用法（用 .env 里的两个变量切换，默认是 A）：
+#
+#   A) 本地/构建机（需要有 Docker，且内存 ≥ 2G）
+#      什么都不用配，直接：
+#        ./deploy.sh --clean
+#
+#   B) 生产服务器（1核2G 跑不动编译，推荐）——镜像由 GitHub Actions 构建并推到 GHCR
+#      在 docker-compose.yml 同目录建一个 .env：
+#        NEW_API_IMAGE=ghcr.io/<你的 GitHub 用户名小写>/new-api:latest
+#        NEW_API_PULL_POLICY=always
+#      然后：
+#        ./deploy.sh --registry
+#      部署就是拉一个 100~200MB 的镜像，几十秒完成，不在服务器上编译。
+#
+# 注意：
+#   - 服务器上永远不要执行 docker compose build / ./deploy.sh（不带 --registry），
+#     那会尝试本机编译，1核2G 会 OOM 或耗时几十分钟。
+#   - 数据全部在卷里（./data、./logs、pg_data 或 mysql_data），重建容器不会丢数据。
+#   - 构建前端由 Dockerfile 第一阶段自动完成，无需手工 bun run build。
 #
 # Using MySQL instead of PostgreSQL:
-#   1. Comment out the postgres service and SQL_DSN line 15
-#   2. Uncomment the mysql service and SQL_DSN line 16
-#   3. Uncomment mysql in depends_on (line 28)
-#   4. Uncomment mysql_data in volumes section (line 64)
+#   1. Comment out the postgres service and the SQL_DSN line under environment
+#   2. Uncomment the mysql service and the mysql SQL_DSN line
+#   3. Uncomment mysql in depends_on
+#   4. Uncomment mysql_data in the volumes section
 #
 # ⚠️  IMPORTANT: Change all default passwords before deploying to production!
 
@@ -16,7 +34,12 @@ version: '3.4' # For compatibility with older Docker versions
 
 services:
   new-api:
-    image: calciumion/new-api:latest
+    # A) 默认：本地构建的镜像；B) 服务器：由 .env 覆盖成 GHCR 镜像
+    image: ${NEW_API_IMAGE:-new-api-custom:latest}
+    pull_policy: ${NEW_API_PULL_POLICY:-never}
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: new-api
     restart: always
     command: --log-dir /app/logs

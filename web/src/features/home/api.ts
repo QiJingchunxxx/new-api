@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { api } from '@/lib/api'
 
-import type { HomePageContentResponse } from './types'
+import type { HomeLandingResponse, HomePageContentResponse } from './types'
 
 // ============================================================================
 // Home Page APIs
@@ -34,6 +34,20 @@ export async function getHomePageContent(): Promise<HomePageContentResponse> {
   // 304. Server-side `no-cache` keeps admin edits immediate.
   const res = await api.get('/api/home_page_content', {
     headers: { 'Cache-Control': null },
+  })
+  return res.data
+}
+
+/**
+ * Get the landing page decoration config.
+ *
+ * Fields left empty by the administrator fall back to the built-in localized
+ * defaults, so the landing page always renders without admin configuration.
+ */
+export async function getHomeLandingConfig(): Promise<HomeLandingResponse> {
+  const res = await api.get('/api/home_landing', {
+    headers: { 'Cache-Control': null },
+    skipErrorHandler: true,
   })
   return res.data
 }

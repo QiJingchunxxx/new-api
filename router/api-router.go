@@ -33,6 +33,7 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/about", controller.GetAbout)
 		//apiRouter.GET("/midjourney", controller.GetMidjourney)
 		apiRouter.GET("/home_page_content", controller.GetHomePageContent)
+		apiRouter.GET("/home_landing", controller.GetHomeLandingConfig)
 		apiRouter.GET("/pricing", middleware.HeaderNavModuleAuth("pricing"), controller.GetPricing)
 		perfMetricsRoute := apiRouter.Group("/perf-metrics")
 		perfMetricsRoute.Use(middleware.HeaderNavModulePublicOrUserAuth("pricing"))
@@ -110,6 +111,10 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/passkey/verify/finish", middleware.UserCriticalRateLimit("security-verification"), middleware.DisableCache(), controller.PasskeyVerifyFinish)
 				selfRoute.DELETE("/passkey", middleware.DisableCache(), controller.PasskeyDelete)
 				selfRoute.GET("/aff", controller.GetAffCode)
+				selfRoute.GET("/contributed_keys", controller.GetSelfContributedKeys)
+				selfRoute.POST("/contributed_keys", middleware.CriticalRateLimit(), controller.AddSelfContributedKey)
+				selfRoute.POST("/contributed_keys/:id/verify", middleware.CriticalRateLimit(), controller.VerifySelfContributedKey)
+				selfRoute.DELETE("/contributed_keys/:id", controller.DeleteSelfContributedKey)
 				selfRoute.GET("/topup/info", controller.GetTopUpInfo)
 				selfRoute.GET("/topup/self", controller.GetUserTopUps)
 				selfRoute.POST("/topup", middleware.CriticalRateLimit(), controller.TopUp)
@@ -399,6 +404,18 @@ func SetApiRouter(router *gin.Engine) {
 			modelsRoute.POST("/", controller.CreateModelMeta)
 			modelsRoute.PUT("/", controller.UpdateModelMeta)
 			modelsRoute.DELETE("/:id", controller.DeleteModelMeta)
+		}
+
+		// Contributed upstream keys (admin management)
+		contributedKeyRoute := apiRouter.Group("/contributed_keys")
+		contributedKeyRoute.Use(middleware.AdminAuth())
+		{
+			contributedKeyRoute.GET("/", controller.GetAllContributedKeys)
+			contributedKeyRoute.GET("/stats", controller.GetContributedKeyStats)
+			contributedKeyRoute.POST("/verify", controller.VerifyContributedKeys)
+			contributedKeyRoute.POST("/recalculate", controller.RecalculateContributedQuota)
+			contributedKeyRoute.PUT("/:id", controller.UpdateContributedKey)
+			contributedKeyRoute.DELETE("/:id", controller.DeleteContributedKey)
 		}
 
 		// Deployments (model deployment management)

@@ -215,6 +215,51 @@ func GetHomePageContent(c *gin.Context) {
 	serveRevalidatedJSON(c, homePageContent)
 }
 
+// GetHomeLandingConfig 返回落地页装修配置。
+// 公开接口，只暴露文案与开关，不含任何密钥信息；文案为空时由前端使用内置多语言默认值。
+func GetHomeLandingConfig(c *gin.Context) {
+	setting := operation_setting.GetHomeLandingSetting()
+	common.ApiSuccess(c, gin.H{
+		"hero": gin.H{
+			"badge":          setting.HeroBadge,
+			"title":          setting.HeroTitle,
+			"highlight":      setting.HeroHighlight,
+			"subtitle":       setting.HeroSubtitle,
+			"primary_text":   setting.HeroPrimaryText,
+			"primary_link":   setting.HeroPrimaryLink,
+			"secondary_text": setting.HeroSecondaryText,
+			"secondary_link": setting.HeroSecondaryLink,
+			"trust":          setting.HeroTrust,
+		},
+		"stats": gin.H{
+			"enabled":  setting.StatsEnabled,
+			"title":    setting.StatsTitle,
+			"subtitle": setting.StatsSubtitle,
+			"items":    operation_setting.ParseHomeLandingStatItems(setting.StatsItems),
+		},
+		"models": gin.H{
+			"enabled":  setting.ModelsEnabled,
+			"title":    setting.ModelsTitle,
+			"subtitle": setting.ModelsSubtitle,
+			"limit":    setting.ModelsLimit,
+			"groups":   operation_setting.HomeLandingGroups(),
+		},
+		"faq": gin.H{
+			"enabled":  setting.FaqEnabled,
+			"title":    setting.FaqTitle,
+			"subtitle": setting.FaqSubtitle,
+			"items":    operation_setting.ParseHomeLandingFaqItems(setting.FaqItems),
+		},
+		"community": gin.H{
+			"enabled":  setting.CommunityEnabled,
+			"title":    setting.CommunityTitle,
+			"desc":     setting.CommunityDesc,
+			"links":    operation_setting.ParseHomeLandingLinks(setting.CommunityLinks),
+			"qr_codes": operation_setting.ParseHomeLandingImages(setting.CommunityQrCodes),
+		},
+	})
+}
+
 func SendEmailVerification(c *gin.Context) {
 	email, err := service.ValidateAccountEmail(c.Query("email"))
 	if err != nil {

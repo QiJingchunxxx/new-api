@@ -16,113 +16,116 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useRef, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
-interface CounterProps {
-  end: number
-  suffix?: string
-  prefix?: string
-  duration?: number
-  decimals?: number
-}
+import { AnimateInView } from '@/components/animate-in-view'
+import { usePricingData } from '@/features/pricing/hooks'
+import { formatNumber } from '@/lib/format'
 
-function Counter(props: CounterProps) {
-  const { end, suffix = '', prefix = '', duration = 1600, decimals = 0 } = props
-  const ref = useRef<HTMLSpanElement>(null)
-  const startedRef = useRef(false)
-
-  const formatValue = useCallback(
-    (v: number) =>
-      decimals > 0 ? v.toFixed(decimals) : Math.round(v).toLocaleString(),
-    [decimals]
-  )
-
-  const animate = useCallback(() => {
-    const el = ref.current
-    if (!el) return
-    const start = performance.now()
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      el.textContent = `${prefix}${formatValue(eased * end)}${suffix}`
-      if (progress < 1) requestAnimationFrame(step)
-    }
-    requestAnimationFrame(step)
-  }, [end, duration, prefix, suffix, formatValue])
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mq.matches) {
-      el.textContent = `${prefix}${formatValue(end)}${suffix}`
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !startedRef.current) {
-          startedRef.current = true
-          animate()
-          observer.unobserve(el)
-        }
-      },
-      { threshold: 0.5 }
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [animate, end, prefix, suffix, formatValue])
-
-  return (
-    <span ref={ref} className='tabular-nums'>
-      {prefix}0{suffix}
-    </span>
-  )
-}
+import type { HomeLandingStatItem } from '../../types'
 
 interface StatsProps {
   className?: string
+  title?: string
+  subtitle?: string
+  /** 后台配置的数据项，按下标覆盖实时数据的标题 / 数值 */
+  items?: HomeLandingStatItem[]
 }
 
-interface StatItem {
-  end: number
-  suffix: string
+type MetricItem = {
   label: string
-  decimals?: number
+  value: string
+  suffix: string
 }
 
-export function Stats(_props: StatsProps) {
+export function Stats(props: StatsProps) {
   const { t } = useTranslation()
+  const { models, vendors, usableGroup, endpointMap, isLoading, error } =
+    usePricingData()
 
-  const stats: StatItem[] = [
-    { end: 50, suffix: '+', label: t('upstream services integrated') },
-    { end: 100, suffix: '+', label: t('model billing support') },
-    { end: 50, suffix: '+', label: t('compatible API routes') },
-    { end: 10, suffix: '+', label: t('scheduling controls') },
+  const configured = props.items ?? []
+  // 无法读取实时数据且后台没有配置数值时整块隐藏，避免落地页出现一片占位符。
+  const hasConfiguredValue = configured.some((item) => item.value?.trim())
+  if (error && !hasConfiguredValue) {
+    return null
+  }
+
+  const liveMetrics: MetricItem[] = [
+    {
+      label: t('Available models'),
+      value: isLoading ? '-' : formatNumber(models.length),
+      suffix: '',
+    },
+    {
+      label: t('Upstream providers'),
+      value: isLoading ? '-' : formatNumber(vendors.length),
+      suffix: '',
+    },
+    {
+      label: t('Available groups'),
+      value: isLoading ? '-' : formatNumber(Object.keys(usableGroup).length),
+      suffix: '',
+    },
+    {
+      label: t('Compatible endpoints'),
+      value: isLoading ? '-' : formatNumber(Object.keys(endpointMap).length),
+      suffix: '',
+    },
   ]
 
+  const metrics: MetricItem[] = liveMetrics.map((live, index) => {
+    const override = configured[index]
+    if (!override) return live
+    return {
+      label: override.label?.trim() || live.label,
+      value: override.value?.trim() || live.value,
+      suffix: override.suffix?.trim() || live.suffix,
+    }
+  })
+
   return (
-    <div className='border-border/40 bg-muted/10 relative z-10 border-y'>
-      <div className='mx-auto max-w-6xl px-6 py-10 md:py-12'>
-        <div className='grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12'>
-          {stats.map((s) => (
+    <section className={`relative z-10 px-6 pb-6 ${props.className ?? ''}`}>
+      <AnimateInView
+        animation='fade-up'
+        className='border-border/60 bg-background/60 mx-auto max-w-5xl overflow-hidden rounded-2xl border shadow-sm backdrop-blur-sm'
+      >
+        <div className='border-border/50 flex flex-wrap items-center justify-between gap-2 border-b px-5 py-3'>
+          <div className='flex items-center gap-2'>
+            <span className='relative flex size-2'>
+              <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70' />
+              <span className='relative inline-flex size-2 rounded-full bg-emerald-500' />
+            </span>
+            <span className='text-sm font-medium'>
+              {props.title?.trim() || t('Live overview')}
+            </span>
+          </div>
+          <span className='text-muted-foreground text-xs'>
+            {props.subtitle?.trim() ||
+              t('Refreshed automatically from live gateway data')}
+          </span>
+        </div>
+
+        <div className='grid grid-cols-2 gap-y-5 px-5 py-5 lg:grid-cols-4'>
+          {metrics.map((metric) => (
             <div
-              key={s.label}
+              key={metric.label}
               className='flex flex-col items-center text-center'
             >
-              <span className='text-2xl font-bold tracking-tight md:text-3xl'>
-                <Counter end={s.end} suffix={s.suffix} decimals={s.decimals} />
+              <span className='text-xl font-bold tracking-tight tabular-nums md:text-2xl'>
+                {metric.value}
+                {metric.suffix ? (
+                  <span className='text-muted-foreground ml-1 text-xs font-medium'>
+                    {metric.suffix}
+                  </span>
+                ) : null}
               </span>
-              <span className='text-muted-foreground mt-1.5 text-xs'>
-                {s.label}
+              <span className='text-muted-foreground mt-1 text-xs'>
+                {metric.label}
               </span>
             </div>
           ))}
         </div>
-      </div>
-    </div>
+      </AnimateInView>
+    </section>
   )
 }

@@ -37,3 +37,76 @@ export interface HomePageContentResult {
   isLoaded: boolean
   isUrl: boolean
 }
+
+// ============================================================================
+// Home Landing（落地页装修）类型
+// ============================================================================
+
+export interface HomeLandingStatItem {
+  label: string
+  value: string
+  suffix: string
+}
+
+export interface HomeLandingFaqItem {
+  question: string
+  answer: string
+}
+
+export interface HomeLandingLink {
+  label: string
+  href: string
+}
+
+export interface HomeLandingImage {
+  label: string
+  image: string
+}
+
+export interface HomeLandingHero {
+  badge: string
+  title: string
+  highlight: string
+  subtitle: string
+  primary_text: string
+  primary_link: string
+  secondary_text: string
+  secondary_link: string
+  trust: string
+}
+
+export interface HomeLandingConfig {
+  hero: HomeLandingHero
+  stats: {
+    enabled: boolean
+    title: string
+    subtitle: string
+    items: HomeLandingStatItem[]
+  }
+  models: {
+    enabled: boolean
+    title: string
+    subtitle: string
+    limit: number
+    groups: string[]
+  }
+  faq: {
+    enabled: boolean
+    title: string
+    subtitle: string
+    items: HomeLandingFaqItem[]
+  }
+  community: {
+    enabled: boolean
+    title: string
+    desc: string
+    links: HomeLandingLink[]
+    qr_codes: HomeLandingImage[]
+  }
+}
+
+export interface HomeLandingResponse {
+  success: boolean
+  message?: string
+  data: HomeLandingConfig
+}

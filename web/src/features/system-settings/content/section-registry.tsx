@@ -24,6 +24,7 @@ import { ChatSettingsSection } from './chat-settings-section'
 import { DashboardSection } from './dashboard-section'
 import { DrawingSettingsSection } from './drawing-settings-section'
 import { FAQSection } from './faq-section'
+import { HomeLandingSection } from './home-landing-section'
 import { UptimeKumaSection } from './uptime-kuma-section'
 
 /**
@@ -38,6 +39,13 @@ function validateDataExportDefaultTime(value: string): 'week' | 'hour' | 'day' {
 }
 
 const CONTENT_SECTIONS = [
+  {
+    id: 'home-landing',
+    titleKey: 'Landing Page',
+    build: (settings: ContentSettings) => (
+      <HomeLandingSection settings={settings} />
+    ),
+  },
   {
     id: 'dashboard',
     titleKey: 'Data Dashboard',

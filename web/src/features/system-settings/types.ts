@@ -224,6 +224,33 @@ export type ContentSettings = {
   MjForwardUrlEnabled: boolean
   MjModeClearEnabled: boolean
   MjActionCheckSuccessEnabled: boolean
+  'home_landing_setting.hero_badge': string
+  'home_landing_setting.hero_title': string
+  'home_landing_setting.hero_highlight': string
+  'home_landing_setting.hero_subtitle': string
+  'home_landing_setting.hero_primary_text': string
+  'home_landing_setting.hero_primary_link': string
+  'home_landing_setting.hero_secondary_text': string
+  'home_landing_setting.hero_secondary_link': string
+  'home_landing_setting.hero_trust': string
+  'home_landing_setting.stats_enabled': boolean
+  'home_landing_setting.stats_title': string
+  'home_landing_setting.stats_subtitle': string
+  'home_landing_setting.stats_items': string
+  'home_landing_setting.models_enabled': boolean
+  'home_landing_setting.models_title': string
+  'home_landing_setting.models_subtitle': string
+  'home_landing_setting.models_limit': number
+  'home_landing_setting.models_groups': string
+  'home_landing_setting.faq_enabled': boolean
+  'home_landing_setting.faq_title': string
+  'home_landing_setting.faq_subtitle': string
+  'home_landing_setting.faq_items': string
+  'home_landing_setting.community_enabled': boolean
+  'home_landing_setting.community_title': string
+  'home_landing_setting.community_desc': string
+  'home_landing_setting.community_links': string
+  'home_landing_setting.community_qr_codes': string
 }
 
 export type ModelSettings = {
