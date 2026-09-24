@@ -6963,5 +6963,40 @@
     "Unexpected upstream response, please try again later": "上游响应异常，请稍后重试",
     "This provider is temporarily unavailable": "该供应商暂时不可用",
     "Verification failed, please try again later": "验证未通过，请稍后重试"
+,
+    "Seamless failover": "无缝故障转移",
+    "Pooled calls rotate between keys. If the key in use fails, the request must be retried on another key so users never notice.": "共享号池的请求会在池内各把 Key 之间轮询；一旦正在使用的那把出错，需要换一把重试，用户才不会感知到。",
+    "Retries: {{count}}": "重试次数：{{count}}",
+    "Retries disabled": "未启用重试",
+    "Failed requests are retried on another pooled key automatically.": "请求失败时会自动换用池内另一把 Key 重试。",
+    "Request retries are currently disabled, so a broken key would surface an error to the caller. Turn on retries to keep the pool transparent.": "当前未启用失败重试，因此某把 Key 不可用时，调用方会直接收到错误。建议开启重试，让号池切换对用户透明。",
+    "Request retries are disabled, so a failing pooled key would surface an error to callers. Enable retries in the Settings tab.": "未启用失败重试：号池中的 Key 出错时，调用方会直接看到错误。请在「设置」页开启重试。",
+    "Enable retries (2 times)": "开启重试（2 次）",
+    "The key will be removed from your list.": "该 Key 将从你的列表中移除。"
+,
+    "Live today": "今日实时",
+    "Across the gateway": "全站可用",
+    "Connected vendors": "已接入的供应商",
+    "Model groups": "可用的模型分组",
+    "API endpoints": "支持的接口协议"
+,
+    "{{count}} API entries deleted. Click \"Save Settings\" to apply.": "已删除 {{count}} 条 API 信息，点击「保存设置」生效。",
+    "{{count}} FAQs deleted. Click \"Save Settings\" to apply.": "已删除 {{count}} 条常见问题，点击「保存设置」生效。",
+    "{{count}} announcements deleted. Click \"Save Settings\" to apply.": "已删除 {{count}} 条公告，点击「保存设置」生效。",
+    "{{count}} groups deleted. Click \"Save Settings\" to apply.": "已删除 {{count}} 个分组，点击「保存设置」生效。"
+,
+    "Calls today": "调用次数",
+    "Tokens used": "Tokens 消耗",
+    "Tokens today": "今日 Tokens",
+    "Across all models": "全站模型合计",
+    "Input {{input}} · Output {{output}}": "输入 {{input}} · 输出 {{output}}",
+    "Today visits": "今日访问量",
+    "Page view statistics": "页面访问统计",
+    "Total users": "用户数量",
+    "Registered users": "注册用户",
+    "Long press or screenshot to scan": "长按或截图扫码",
+    "Service running": "服务运行中",
+    "Service unavailable": "服务不可用",
+    "Operated by the site owner, who is responsible for maintenance and abuse prevention.": "部署者自行承担运维与防滥用责任。"
   }
 }

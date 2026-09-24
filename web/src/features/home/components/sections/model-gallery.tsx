@@ -22,8 +22,11 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AnimateInView } from '@/components/animate-in-view'
+import { Badge } from '@/components/ui/badge'
 import { usePricingData } from '@/features/pricing/hooks'
-import { formatCompactNumber } from '@/lib/format'
+import { formatCompactNumber, formatNumber } from '@/lib/format'
+
+import { useLandingStats } from '../../hooks'
 
 interface ModelGalleryProps {
   className?: string
@@ -31,6 +34,8 @@ interface ModelGalleryProps {
   subtitle?: string
   limit?: number
   groups?: string[]
+  /** 模型名 -> 展示标签，来自后台装修配置 */
+  tags?: Record<string, string>
 }
 
 const DEFAULT_LIMIT = 12
@@ -45,6 +50,19 @@ const MAX_LIMIT = 60
 export function ModelGallery(props: ModelGalleryProps) {
   const { t } = useTranslation()
   const { models, isLoading } = usePricingData()
+  const stats = useLandingStats()
+
+  // 日志里的模型名与定价目录里的展示名可能不一致，两个键都查一次。
+  const usageByModel = useMemo(() => {
+    const map = new Map<string, { calls: number; tokens: number }>()
+    for (const item of stats?.models ?? []) {
+      map.set(item.model_name, {
+        calls: item.calls,
+        tokens: item.total_tokens,
+      })
+    }
+    return map
+  }, [stats])
 
   const visibleModels = useMemo(() => {
     const filterGroups = (props.groups ?? []).filter(
@@ -74,13 +92,10 @@ export function ModelGallery(props: ModelGalleryProps) {
       <div className='mx-auto max-w-6xl'>
         <AnimateInView className='mb-10 flex flex-wrap items-end justify-between gap-4'>
           <div>
-            <p className='text-muted-foreground mb-2 text-xs font-medium tracking-widest uppercase'>
-              {t('Supported Models')}
-            </p>
-            <h2 className='text-2xl font-bold tracking-tight md:text-3xl'>
-              {props.title?.trim() || t('Live model catalog')}
+            <h2 className='text-2xl font-bold tracking-tight md:text-[28px]'>
+              {props.title?.trim() || t('Supported Models')}
             </h2>
-            <p className='text-muted-foreground/80 mt-2 max-w-2xl text-sm leading-relaxed'>
+            <p className='text-muted-foreground/80 mt-2.5 max-w-2xl text-sm leading-relaxed'>
               {props.subtitle?.trim() ||
                 t(
                   'Availability, groups and endpoints come straight from the gateway, so what you see here is exactly what can be scheduled.'
@@ -96,67 +111,74 @@ export function ModelGallery(props: ModelGalleryProps) {
           </Link>
         </AnimateInView>
 
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
           {visibleModels.map((model, index) => {
             const groups = model.enable_groups ?? []
-            const endpoints = model.supported_endpoint_types ?? []
             const available = groups.length > 0
+            const tag =
+              props.tags?.[model.model_name] ?? props.tags?.[model.key] ?? ''
+            const usage =
+              usageByModel.get(model.model_name) ?? usageByModel.get(model.key)
             return (
               <AnimateInView
                 key={model.key}
                 delay={Math.min(index * 40, 320)}
-                className='border-border/60 bg-card hover:border-border/90 flex flex-col rounded-xl border p-4 transition-colors'
+                className='border-border/60 bg-card hover:border-border flex flex-col rounded-xl border p-5 transition-colors'
               >
-                <div className='flex items-start justify-between gap-2'>
-                  <div className='min-w-0'>
-                    <div
-                      className='truncate text-sm font-semibold'
-                      title={model.model_name}
-                    >
-                      {model.model_name}
-                    </div>
-                    {model.vendor_name ? (
-                      <div className='text-muted-foreground mt-0.5 truncate text-[11px]'>
-                        {model.vendor_name}
-                      </div>
-                    ) : null}
+                <div className='flex items-start justify-between gap-3'>
+                  <div
+                    className='min-w-0 truncate text-sm font-semibold'
+                    title={model.model_name}
+                  >
+                    {model.model_name}
                   </div>
-                  <span
-                    className={`mt-0.5 size-2 shrink-0 rounded-full ${available ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`}
-                    title={available ? t('Available') : t('Unavailable')}
-                  />
+                  {tag ? (
+                    <Badge
+                      variant='secondary'
+                      className='shrink-0 rounded-md bg-blue-50 px-1.5 py-0 text-[10px] font-normal text-blue-600 dark:bg-blue-500/15 dark:text-blue-300'
+                    >
+                      {tag}
+                    </Badge>
+                  ) : !available ? (
+                    <Badge
+                      variant='outline'
+                      className='text-muted-foreground shrink-0 rounded-md px-1.5 py-0 text-[10px] font-normal'
+                    >
+                      {t('Unavailable')}
+                    </Badge>
+                  ) : null}
                 </div>
 
-                <p className='text-muted-foreground/80 mt-2 line-clamp-2 min-h-8 text-xs leading-relaxed'>
+                <p className='text-muted-foreground/80 mt-2.5 line-clamp-2 min-h-9 text-xs leading-relaxed'>
                   {model.description?.trim() ||
                     t('Routed through the unified gateway.')}
                 </p>
 
-                <div className='border-border/50 mt-3 grid grid-cols-3 gap-2 border-t pt-3 text-center'>
-                  <div>
-                    <div className='text-xs font-semibold tabular-nums'>
+                <div className='border-border/50 mt-4 grid grid-cols-3 gap-3 border-t pt-3.5'>
+                  <div className='min-w-0'>
+                    <div className='text-muted-foreground truncate text-[11px]'>
+                      {t('Context')}
+                    </div>
+                    <div className='mt-0.5 truncate text-sm font-semibold tabular-nums'>
                       {model.context_length
                         ? formatCompactNumber(model.context_length)
                         : '-'}
                     </div>
-                    <div className='text-muted-foreground mt-0.5 text-[10px]'>
-                      {t('Context')}
+                  </div>
+                  <div className='min-w-0'>
+                    <div className='text-muted-foreground truncate text-[11px]'>
+                      {t('Calls today')}
+                    </div>
+                    <div className='mt-0.5 truncate text-sm font-semibold tabular-nums'>
+                      {formatNumber(usage?.calls ?? 0)}
                     </div>
                   </div>
-                  <div>
-                    <div className='text-xs font-semibold tabular-nums'>
-                      {groups.length}
+                  <div className='min-w-0'>
+                    <div className='text-muted-foreground truncate text-[11px]'>
+                      {t('Tokens today')}
                     </div>
-                    <div className='text-muted-foreground mt-0.5 text-[10px]'>
-                      {t('Groups')}
-                    </div>
-                  </div>
-                  <div>
-                    <div className='text-xs font-semibold tabular-nums'>
-                      {endpoints.length}
-                    </div>
-                    <div className='text-muted-foreground mt-0.5 text-[10px]'>
-                      {t('Endpoints')}
+                    <div className='mt-0.5 truncate text-sm font-semibold tabular-nums'>
+                      {formatNumber(usage?.tokens ?? 0)}
                     </div>
                   </div>
                 </div>

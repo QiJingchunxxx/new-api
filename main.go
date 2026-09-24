@@ -138,6 +138,10 @@ func main() {
 	// Contributed upstream key task: daily quota rollover + periodic key verification
 	service.StartContributedKeyTask()
 
+	// Landing page statistics: aggregated in the background so the home page never
+	// queries the log table on the request path.
+	service.StartLandingStatsTask()
+
 	// Report this process as a system instance so the System Info page can show
 	// all currently alive nodes in multi-instance deployments.
 	service.StartSystemInstanceReporter()

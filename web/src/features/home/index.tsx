@@ -36,7 +36,7 @@ import {
   ModelGallery,
   Stats,
 } from './components'
-import { useHomeLanding, useHomePageContent } from './hooks'
+import { useHomeLanding, useHomePageContent, useLandingVisitReporter } from './hooks'
 
 export function Home() {
   const { i18n, t } = useTranslation()
@@ -46,6 +46,8 @@ export function Home() {
   const isAuthenticated = !!auth.user
   const { content, isLoaded, isUrl } = useHomePageContent()
   const landing = useHomeLanding()
+  // 首页被打开时记一次访问，用于数据条的「今日访问量」。
+  useLandingVisitReporter()
 
   const syncIframePreferences = useCallback(() => {
     try {
@@ -151,6 +153,7 @@ export function Home() {
           subtitle={landing?.models.subtitle}
           limit={landing?.models.limit}
           groups={landing?.models.groups}
+          tags={landing?.models.tags}
         />
       ) : null}
       <HowItWorks />

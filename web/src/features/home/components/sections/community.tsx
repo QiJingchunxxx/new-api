@@ -16,11 +16,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { BookOpen, ExternalLink, MessagesSquare } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { AnimateInView } from '@/components/animate-in-view'
 import { useStatus } from '@/hooks/use-status'
+import { cn } from '@/lib/utils'
 
 import type { HomeLandingImage, HomeLandingLink } from '../../types'
 
@@ -61,16 +62,12 @@ export function Community(props: CommunityProps) {
         animation='fade-up'
         className='mx-auto max-w-4xl'
       >
-        <div className='border-border/60 bg-card/60 flex flex-col gap-8 rounded-2xl border p-6 md:flex-row md:items-center md:justify-between md:p-8'>
+        <div className='border-border/60 bg-card flex flex-col gap-8 rounded-2xl border p-6 md:flex-row md:items-center md:justify-between md:p-8'>
           <div className='min-w-0'>
-            <div className='text-muted-foreground mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-widest uppercase'>
-              <MessagesSquare className='size-3.5' />
-              {t('Community')}
-            </div>
             <h2 className='text-xl font-bold tracking-tight md:text-2xl'>
               {props.title?.trim() || t('Ran into a problem? Join us')}
             </h2>
-            <p className='text-muted-foreground/80 mt-2 max-w-xl text-sm leading-relaxed'>
+            <p className='text-muted-foreground/80 mt-2.5 max-w-xl text-sm leading-relaxed'>
               {props.desc?.trim() ||
                 t(
                   'Ask questions, report issues and share feedback with other users and the maintainers.'
@@ -86,12 +83,11 @@ export function Community(props: CommunityProps) {
                     {...(isExternal
                       ? { target: '_blank', rel: 'noopener noreferrer' }
                       : {})}
-                    className='border-border/60 hover:bg-muted/40 inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-sm font-medium transition-colors'
+                    className='border-border/60 hover:bg-muted/40 group inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-sm font-medium transition-colors'
                   >
-                    <BookOpen className='size-3.5' />
                     {link.label}
                     {isExternal ? (
-                      <ExternalLink className='text-muted-foreground size-3' />
+                      <ArrowRight className='size-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
                     ) : null}
                   </a>
                 )
@@ -100,20 +96,32 @@ export function Community(props: CommunityProps) {
           </div>
 
           {qrCodes.length > 0 ? (
-            <div className='flex shrink-0 items-center gap-4'>
-              {qrCodes.map((item) => (
+            <div className='flex shrink-0 flex-wrap items-start gap-4'>
+              {qrCodes.map((item, index) => (
                 <div
                   key={`${item.label}-${item.image}`}
-                  className='flex flex-col items-center gap-2'
+                  className='border-border/60 bg-background flex w-36 flex-col items-center rounded-xl border p-3'
                 >
+                  {item.label ? (
+                    <span
+                      className={cn(
+                        'mb-2.5 rounded-md px-2 py-0.5 text-[11px] font-medium',
+                        index % 2 === 0
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+                          : 'bg-blue-500/10 text-blue-600 dark:text-blue-300'
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  ) : null}
                   <img
                     src={item.image}
                     alt={item.label || t('Community QR code')}
-                    className='border-border/60 size-28 rounded-xl border object-contain'
+                    className='size-24 rounded-lg object-contain'
                     loading='lazy'
                   />
-                  <span className='text-muted-foreground text-[11px]'>
-                    {item.label}
+                  <span className='text-muted-foreground mt-2.5 text-[10px]'>
+                    {t('Long press or screenshot to scan')}
                   </span>
                 </div>
               ))}

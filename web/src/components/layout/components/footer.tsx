@@ -157,6 +157,7 @@ export function Footer(props: FooterProps) {
     footerHtml,
     demoSiteEnabled,
   } = useSystemConfig()
+  const { status } = useStatus()
 
   const displayLogo = systemLogo || props.logo || '/logo.png'
   const displayName = systemName || props.name || 'New API'
@@ -288,6 +289,23 @@ export function Footer(props: FooterProps) {
               ))}
             </div>
           )}
+          {/* Service status */}
+          <div className='shrink-0 text-left md:text-right'>
+            <div className='flex items-center gap-1.5 md:justify-end'>
+              <span className='relative flex size-1.5'>
+                <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70' />
+                <span className='relative inline-flex size-1.5 rounded-full bg-emerald-500' />
+              </span>
+              <span className='text-xs font-medium'>
+                {status ? t('Service running') : t('Service unavailable')}
+              </span>
+            </div>
+            <p className='text-muted-foreground/50 mt-1.5 max-w-[260px] text-xs leading-relaxed md:ml-auto'>
+              {t(
+                'Operated by the site owner, who is responsible for maintenance and abuse prevention.'
+              )}
+            </p>
+          </div>
         </div>
 
         {/* Copyright + optional legal links inline on the left, project

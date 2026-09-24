@@ -18,3 +18,4 @@ For commercial licensing, please contact support@quantumnous.com
 */
 export { useHomeLanding } from './use-home-landing'
 export { useHomePageContent } from './use-home-page-content'
+export { useLandingStats, useLandingVisitReporter } from './use-landing-stats'

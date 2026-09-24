@@ -29,6 +29,13 @@ agent_created: true
 4. 提供 `GetXxxSetting()` 读取。
 5. **坑**：`GET /api/option/` 会过滤掉以 `Key` / `Secret` / `Token` / `api_key` 结尾的字段名 —— 配置字段不要这样命名。
 6. 需要给普通用户/游客读取时，另加公开接口（见第 4 步），不要把 `/api/option/` 暴露出去。
+7. **改「代码里的默认值」不一定生效**：`model/option.go` 的 `InitOptionMap` 先执行
+   `config.GlobalConfig.ExportAllConfigs()`（把注册的默认值灌进 `common.OptionMap`），
+   紧接着 `loadOptionsFromDatabase()` 用数据库里的值**覆盖**它。所以：
+   - 后台从没保存过该项 → 代码默认值生效（改代码 + 重新构建即可）；
+   - 后台保存过 → 数据库优先，**必须让用户在后台界面改**（改完立即生效，不用重建镜像）。
+   改配置默认值时要同时告诉用户这两条路径，别只说"改了代码"。
+   `GET /api/option/` 下发的是 `common.OptionMap`（已合并默认值），所以前端表单读得到默认值，不会读到空。
 
 ## 2. 新增数据表
 
@@ -101,7 +108,31 @@ func StartXxxTask() {
 - 前端文案键就是英文原文：组件里 `t('English sentence')`。
 - 中文翻译在 `web/src/i18n/locales/zh.json`（结构 `{"translation": {...}}`，约 7000 键）。
   **不要整体重排**，用脚本在 `translation` 对象末尾追加 `,\n` + 新键即可（键内含 `\n`、`{{var}}` 要原样保留）。
-- 不要手写漏键：先脚本扫描本次改动文件的 `t('...')`，与 zh.json 取差集，再一次补齐。
+- **每次动完前端就要重跑一次全量扫描**，不要只在"第一轮写完"时扫一次：
+  分多轮加文案时，后加的那批极容易漏（本项目就出现过管理员界面混出 9 条英文）。
+  扫描范围要覆盖所有本次涉及的特性目录 + `hooks/` + `system-settings/content/`：
+
+  ```bash
+  cd web/src && "C:/Users/15828/.workbuddy/binaries/python/envs/default/Scripts/python.exe" - <<'PY'
+  import json, re, glob, os
+  pats = ["features/<你的特性>/**/*.ts", "features/<你的特性>/**/*.tsx",
+          "hooks/use-top-nav-links.ts", "features/system-settings/content/*.tsx"]
+  files = sorted({f for p in pats for f in glob.glob(p, recursive=True) if os.path.isfile(f)})
+  rx = re.compile(r"\bt\(\s*'((?:[^'\\]|\\.)*)'", re.DOTALL)
+  found = {}
+  for f in files:
+      for m in rx.finditer(open(f, encoding="utf-8").read()):
+          s = m.group(1).replace("\\n","\n").replace("\\'","'")
+          found.setdefault(s, set()).add(f)
+  zh = json.load(open("i18n/locales/zh.json", encoding="utf-8"))["translation"]
+  miss = sorted(k for k in found if k not in zh)
+  print("缺失", len(miss))
+  for k in miss: print("  ", repr(k), "<-", sorted(found[k]))
+  PY
+  ```
+
+- 也要扫**非 `t()` 的文案**：`titleKey: '...'`、`label: '...'`、数组里的命令行字符串等，
+  这些同样会以英文露出。
 - 前端 i18next 会把 `{{count}}` 当作复数变量（会先找 `key_one`/`key_other`，找不到则回退原键），仓库既有代码已这样用，可沿用。
 
 ## 8. 并发与幂等（额度类功能必看）
@@ -135,13 +166,84 @@ func StartXxxTask() {
 - 需要给用户"失败原因"时，落库一个**分类码**（auth/quota/network/upstream/format/config/unknown），
   前端按码取多语言文案，绝不把上游原始报错或上游地址下发给用户。
 - 公网配置类接口（如 `/api/home_landing`）只下发展示字段；上游地址、内部标签留在管理端接口。
+- **文案也属于"内部信息"**（本项目用户明确要求）：用户端不要出现
+  「系统会定期检查 Key」「失效后额度会被自动回收」「提交即表示同意…被用于本站调用」这类
+  后台机制说明与免责声明 —— 用户只需要知道"我能做什么、我能得到什么"。
+  这类解释放到管理端页面（和代码注释）里。写用户端文案时先问：这行字是给用户看的，还是给运维看的？
 
 ## 9. 自检清单
 
 - [ ] Go：新增 import 全部被使用；GORM 链式调用方法名正确（`Updates(map[string]any{...})` 才更新零值）。
 - [ ] 前端：没有未使用的 import/变量（`noUnusedLocals`/`noUnusedParameters` 会让 `tsgo -b` 失败）。
 - [ ] 路由：`routeTree.gen.ts` 已同步；新页面在侧边栏可见。
-- [ ] i18n：新键已补 zh.json。
+- [ ] i18n：**本轮全部**改动文件的 `t('...')` 都已扫过并与 zh.json 取差集补齐（多轮改动要重扫）。
+- [ ] 用户端没有出现后台机制说明 / 免责声明类文案。
 - [ ] 配置项命名不以 Key/Secret/Token 结尾。
 - [ ] 定时任务只在 master 节点跑，且带重入守卫。
 - [ ] 提示用户执行 `cd web && bun install && bun run build` 才能生效。
+
+## 10. 落地页与公开页面（二次开发最常改的地方）
+
+### 首页渲染优先级 —— 排查「改了首页没生效」的第一个嫌疑
+
+`features/home/index.tsx` 的顺序是：
+
+1. `HomePageContent`（后台「系统设置 → 内容」里的自定义首页内容）非空 → **直接渲染它**
+   （值是 URL 走 iframe、HTML 走 `RichContent`、Markdown 走富文本），**内置落地页组件完全不参与渲染**；
+2. 否则渲染落地页区块：`Hero → Stats → ModelGallery → HowItWorks → Features → Faq → Community → CTA → Footer`。
+
+每个区块还能被 `home_landing_setting.*` 的开关单独关掉（`stats_enabled`、`models_enabled`…），
+关掉了同样不渲染。用户说「我改了 `features/home/...` 但页面没变」时，先问这两件事。
+
+### 落地页装修是表驱动的，加字段只改三处
+
+1. `setting/operation_setting/home_landing_setting.go` —— struct 加字段（`json:"snake_case"`）；
+2. `web/src/features/home/types.ts` —— 前端类型同步；
+3. `web/src/features/system-settings/content/home-landing-section.tsx` —— `FIELD_GROUPS` 里加一行。
+
+表单的初始值读取、脏检查、保存都按 `FIELD_GROUPS` 统一处理，不需要手写 state。
+
+### 上游自留标识（二次开发站点通常要删）
+
+- **页头版本号**：`<SystemUpdateAction presentation='version' />`，出现在
+  `components/layout/components/public-header.tsx`（公开页）与 `app-header.tsx`（后台）。
+  组件内部 `if (!isAdmin) return null` —— **只有管理员看得见**，用户报「我的页面上有个版本号」基本就是它。
+  删掉后必须清 import。注意后台「系统设置 → 维护」的更新检查是同一组件的另一个入口（`compact={false}`），别一起删。
+- 页脚署名：`components/layout/components/footer.tsx` 的 `ProjectAttribution`（© … New API），同类清理项。
+
+### 对齐参考站点时的取舍
+
+- **只改截图里能看到的区块**，没露出的部分不要擅自重排 —— 否则很容易来回返工。
+- 「像不像大厂官网」的差异点往往不在颜色，而在这些装饰件：眉标（`uppercase tracking-widest` 小标签）、
+  徽章、演示性组件（终端动画等）。参考站点没有的就删。
+- 数据条这类展示块的结构很讲究方向：本项目的参考站点是「指标名在上、数值在中、说明在下」，
+  而常见默认实现是「数值在上、标签在下」，照抄前先看清截图。
+- 展示的指标必须来自真实接口。真拿不到（例如全站用量聚合）就换成本站真实可得的口径，
+  **不要为了像而造假数字**；需要新数据时优先新增带缓存的公开接口，绝不每次请求都去聚合 `logs` 表。
+
+### 从截图推断数据口径（很有用的一招）
+
+拿到参考站点截图时，**对比两张不同时间截图的同一个数字**就能判断口径：
+
+- 数字在小幅增长（例如 20 分钟内 26,231 → 26,345）→ 是**当日**维度，只需 `WHERE created_at >= 今日0点`，
+  能走 `idx_created_at_type` 索引，性能安全；
+- 数字几乎不变且量级巨大 → 是**累计**维度，必须缓存 + 低频刷新，绝不能放在请求路径上。
+
+本项目一开始按「累计」设计，靠这个对比纠正成了「当日」，省掉了全表聚合。多张截图是宝贵线索。
+
+### 公开统计接口的标准写法
+
+1. 聚合放在 `service/xxx_stats.go`：内存快照 + `sync.RWMutex` + 后台 tick（本项目用 `StartXxxTask` 挂 `main.go`）；
+2. 首次调用同步刷新一次（否则首屏全是 0），并用一把额外的 `Mutex` 串行化，避免并发请求重复打库；
+3. 高频写入（如页面访问量）先在内存累加，定时批量落库；落库用
+   `UpdateColumns(map[string]any{"cnt": gorm.Expr("cnt + ?", delta)})` 先试累加，`RowsAffected == 0` 再 INSERT；
+4. 接口只返回快照，且**只下发聚合数字**（不含用户、渠道、Key 维度）；
+5. 前端一定要有降级：接口不可用时退回另一套真实数据，别让区块空掉。
+   本项目数据条就在统计接口 404 时自动退回「可用模型 / 供应商 / 分组 / 接口」。
+
+### 用日志库聚合时的注意点
+
+- 计费用日志要用 `type = 2`（`LogTypeConsume`）过滤，否则会把充值、管理操作也算进去。
+- 模型名的**两套写法**：日志里的 `model_name` 与定价目录的 `model_name`/`key` 可能不一致，
+  前端查用量时两个键都试一次。
+- `model.LOG_DB` 可能与 `model.DB` 不是同一个库，聚合要走 `LOG_DB`。

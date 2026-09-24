@@ -10,9 +10,10 @@ import (
 // HomeLandingStatItem 落地页数据条的一项。
 // Value 为空时前端使用站点的实时数据。
 type HomeLandingStatItem struct {
-	Label  string `json:"label"`
-	Value  string `json:"value"`
-	Suffix string `json:"suffix"`
+	Label  string `json:"label"`  // 指标名（第一行）
+	Value  string `json:"value"`  // 指标数值（第二行）
+	Suffix string `json:"suffix"` // 数值后缀，紧跟在数值后面
+	Hint   string `json:"hint"`   // 指标说明（第三行小字）
 }
 
 // HomeLandingFaqItem 落地页常见问题。
@@ -58,6 +59,7 @@ type HomeLandingSetting struct {
 	ModelsSubtitle string `json:"models_subtitle"` // 区块副标题
 	ModelsLimit    int    `json:"models_limit"`    // 展示数量上限
 	ModelsGroups   string `json:"models_groups"`   // 只展示这些分组（逗号分隔，留空=全部）
+	ModelsTags     string `json:"models_tags"`     // JSON: {"模型名":"标签"}，模型卡片右上角的徽章
 
 	FaqEnabled  bool   `json:"faq_enabled"`  // 是否展示常见问题
 	FaqTitle    string `json:"faq_title"`    // 区块标题
@@ -145,4 +147,27 @@ func HomeLandingGroups() []string {
 		}
 	}
 	return groups
+}
+
+// ParseHomeLandingModelTags 解析模型标签配置：模型名 -> 标签文案。
+//
+// 标签是纯展示用的运营信息（例如“深度推理”“长文本”），与模型的实际能力无关，
+// 因此单独配置，不去动模型本身。
+func ParseHomeLandingModelTags(raw string) map[string]string {
+	tags := make(map[string]string)
+	if strings.TrimSpace(raw) == "" {
+		return tags
+	}
+	if err := json.Unmarshal([]byte(raw), &tags); err != nil {
+		return make(map[string]string)
+	}
+	cleaned := make(map[string]string, len(tags))
+	for name, tag := range tags {
+		if key := strings.TrimSpace(name); key != "" {
+			if value := strings.TrimSpace(tag); value != "" {
+				cleaned[key] = value
+			}
+		}
+	}
+	return cleaned
 }

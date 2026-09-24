@@ -22,7 +22,6 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 
-import { HeroTerminalDemo } from '../hero-terminal-demo'
 import type { HomeLandingHero } from '../../types'
 
 interface HeroProps {
@@ -56,7 +55,11 @@ function HeroAction(props: {
   )
 
   const isExternal = /^https?:\/\//i.test(to)
-  const className = 'group h-12 rounded-xl px-6 text-sm font-medium'
+  // 主行动点用实心蓝，和标题的蓝紫渐变同色系；次行动点保持描边样式。
+  const className =
+    props.variant === 'outline'
+      ? 'group h-12 rounded-xl px-6 text-sm font-medium'
+      : 'group h-12 rounded-xl bg-blue-600 px-6 text-sm font-medium text-white shadow-sm hover:bg-blue-700'
   if (isExternal) {
     return (
       <Button
@@ -83,10 +86,8 @@ export function Hero(props: HeroProps) {
   const { t } = useTranslation()
   const config = props.config
 
-  const badge = config?.badge?.trim() || t('Unified AI gateway')
   const title = config?.title?.trim() || t('One key for')
-  const highlight =
-    config?.highlight?.trim() || t('every major AI model')
+  const highlight = config?.highlight?.trim() || t('every major AI model')
   const subtitle =
     config?.subtitle?.trim() ||
     t(
@@ -94,7 +95,8 @@ export function Hero(props: HeroProps) {
     )
   const primaryText = config?.primary_text?.trim() || t('Get your key')
   const primaryLink = config?.primary_link?.trim() || '/sign-up'
-  const secondaryText = config?.secondary_text?.trim() || t('View pricing')
+  // 次要入口默认不展示，管理员在后台填了文案才会出现，保持主视觉只有一个行动点。
+  const secondaryText = config?.secondary_text?.trim() || ''
   const secondaryLink = config?.secondary_link?.trim() || '/pricing'
   const trust =
     config?.trust?.trim() ||
@@ -102,7 +104,7 @@ export function Hero(props: HeroProps) {
 
   return (
     <section
-      className={`relative z-10 overflow-hidden px-6 pt-20 pb-14 md:pt-28 md:pb-16 ${props.className ?? ''}`}
+      className={`relative z-10 overflow-hidden px-6 pt-24 pb-12 md:pt-32 md:pb-14 ${props.className ?? ''}`}
     >
       {/* Radial gradient background */}
       <div
@@ -123,65 +125,49 @@ export function Hero(props: HeroProps) {
       />
 
       <div className='mx-auto flex max-w-4xl flex-col items-center text-center'>
-        <div
-          className='landing-animate-fade-up border-border/60 bg-background/70 mb-6 inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[11px] font-medium shadow-xs backdrop-blur-sm'
+        <h1
+          className='landing-animate-fade-up text-[clamp(2rem,5.2vw,3.5rem)] leading-[1.15] font-bold tracking-tight'
           style={{ animationDelay: '0ms' }}
         >
-          <span className='relative flex size-1.5'>
-            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75' />
-            <span className='relative inline-flex size-1.5 rounded-full bg-emerald-500' />
-          </span>
-          {badge}
-        </div>
-
-        <h1
-          className='landing-animate-fade-up text-[clamp(2rem,5vw,3.5rem)] leading-[1.12] font-bold tracking-tight'
-          style={{ animationDelay: '60ms' }}
-        >
           {title}{' '}
-          <span className='bg-gradient-to-r from-blue-500 via-violet-500 to-fuchsia-500 bg-clip-text text-transparent dark:from-blue-400 dark:via-violet-400 dark:to-fuchsia-400'>
+          <span className='bg-gradient-to-r from-orange-500 via-rose-500 to-purple-600 bg-clip-text text-transparent dark:from-orange-400 dark:via-rose-400 dark:to-purple-400'>
             {highlight}
           </span>
         </h1>
 
         <p
-          className='landing-animate-fade-up text-muted-foreground/85 mt-5 max-w-2xl text-sm leading-relaxed opacity-0 md:text-base'
-          style={{ animationDelay: '120ms' }}
+          className='landing-animate-fade-up text-muted-foreground/85 mt-5 max-w-2xl text-sm leading-relaxed opacity-0 md:text-[15px]'
+          style={{ animationDelay: '80ms' }}
         >
           {subtitle}
         </p>
 
         <div
-          className='landing-animate-fade-up mt-9 flex flex-wrap items-center justify-center gap-3 opacity-0'
-          style={{ animationDelay: '180ms' }}
+          className='landing-animate-fade-up mt-8 flex flex-wrap items-center justify-center gap-3 opacity-0'
+          style={{ animationDelay: '140ms' }}
         >
           <HeroAction
             label={props.isAuthenticated ? t('Go to Dashboard') : primaryText}
             to={props.isAuthenticated ? '/dashboard' : primaryLink}
             withIcon
           />
-          <HeroAction
-            label={secondaryText}
-            to={secondaryLink}
-            variant='outline'
-          />
+          {secondaryText ? (
+            <HeroAction
+              label={secondaryText}
+              to={secondaryLink}
+              variant='outline'
+            />
+          ) : null}
         </div>
 
         {trust ? (
           <p
             className='landing-animate-fade-up text-muted-foreground/70 mt-5 text-xs opacity-0'
-            style={{ animationDelay: '240ms' }}
+            style={{ animationDelay: '200ms' }}
           >
             {trust}
           </p>
         ) : null}
-
-        <div
-          className='landing-animate-fade-up mt-12 w-full opacity-0'
-          style={{ animationDelay: '300ms' }}
-        >
-          <HeroTerminalDemo />
-        </div>
       </div>
     </section>
   )

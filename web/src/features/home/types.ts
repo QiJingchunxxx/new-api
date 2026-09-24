@@ -43,9 +43,14 @@ export interface HomePageContentResult {
 // ============================================================================
 
 export interface HomeLandingStatItem {
+  /** 指标名（第一行） */
   label: string
+  /** 指标数值（第二行）；留空则使用站点实时数据 */
   value: string
+  /** 数值后缀，紧跟数值显示 */
   suffix: string
+  /** 指标说明（第三行小字），留空则不显示 */
+  hint: string
 }
 
 export interface HomeLandingFaqItem {
@@ -89,6 +94,8 @@ export interface HomeLandingConfig {
     subtitle: string
     limit: number
     groups: string[]
+    /** 模型名 -> 展示标签（如「深度推理」），用于卡片右上角徽章 */
+    tags: Record<string, string>
   }
   faq: {
     enabled: boolean
@@ -109,4 +116,36 @@ export interface HomeLandingResponse {
   success: boolean
   message?: string
   data: HomeLandingConfig
+}
+
+// ============================================================================
+// 首页统计（数据条与模型卡片的用量）
+// ============================================================================
+
+/** 单个模型当天的用量 */
+export interface LandingModelUsage {
+  model_name: string
+  calls: number
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+}
+
+/** 首页数据条使用的统计快照，全部为「当天」口径 */
+export interface LandingStats {
+  date: string
+  today_calls: number
+  today_prompt_tokens: number
+  today_completion_tokens: number
+  today_tokens: number
+  today_visits: number
+  user_count: number
+  models: LandingModelUsage[]
+  updated_time: number
+}
+
+export interface LandingStatsResponse {
+  success: boolean
+  message?: string
+  data: LandingStats
 }

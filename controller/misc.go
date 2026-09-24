@@ -243,6 +243,7 @@ func GetHomeLandingConfig(c *gin.Context) {
 			"subtitle": setting.ModelsSubtitle,
 			"limit":    setting.ModelsLimit,
 			"groups":   operation_setting.HomeLandingGroups(),
+			"tags":     operation_setting.ParseHomeLandingModelTags(setting.ModelsTags),
 		},
 		"faq": gin.H{
 			"enabled":  setting.FaqEnabled,

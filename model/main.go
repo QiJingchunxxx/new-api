@@ -361,6 +361,7 @@ func migrateDB() error {
 		&Checkin{},
 		&ContributedKey{},
 		&ContributedKeyGrant{},
+		&LandingVisitStat{},
 		&SubscriptionOrder{},
 		&UserSubscription{},
 		&SubscriptionPreConsumeRecord{},

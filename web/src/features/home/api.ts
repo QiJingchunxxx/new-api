@@ -18,7 +18,11 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { api } from '@/lib/api'
 
-import type { HomeLandingResponse, HomePageContentResponse } from './types'
+import type {
+  HomeLandingResponse,
+  HomePageContentResponse,
+  LandingStatsResponse,
+} from './types'
 
 // ============================================================================
 // Home Page APIs
@@ -50,4 +54,24 @@ export async function getHomeLandingConfig(): Promise<HomeLandingResponse> {
     skipErrorHandler: true,
   })
   return res.data
+}
+
+/**
+ * Get the aggregated landing page statistics.
+ *
+ * The server keeps this snapshot in memory and refreshes it in the background,
+ * so polling it never touches the log table on the request path.
+ */
+export async function getLandingStats(): Promise<LandingStatsResponse> {
+  const res = await api.get('/api/landing_stats', {
+    skipErrorHandler: true,
+  })
+  return res.data
+}
+
+/** Report one landing page visit; the server batches these before persisting. */
+export async function recordLandingVisit(): Promise<void> {
+  await api.post('/api/landing_visit', undefined, {
+    skipErrorHandler: true,
+  })
 }

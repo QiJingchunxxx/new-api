@@ -58,9 +58,8 @@ type FieldGroup = {
 const FIELD_GROUPS: FieldGroup[] = [
   {
     title: 'Hero section',
-    hint: 'Leave a field empty to keep the built-in localized copy.',
+    hint: 'Leave a field empty to keep the built-in localized copy. Leave the secondary button label empty to keep a single action button.',
     fields: [
-      { key: 'hero_badge', kind: 'text', label: 'Top badge' },
       { key: 'hero_title', kind: 'text', label: 'Headline' },
       { key: 'hero_highlight', kind: 'text', label: 'Headline highlight' },
       { key: 'hero_subtitle', kind: 'textarea', label: 'Subtitle' },
@@ -70,6 +69,7 @@ const FIELD_GROUPS: FieldGroup[] = [
         key: 'hero_secondary_text',
         kind: 'text',
         label: 'Secondary button label',
+        hint: 'Empty hides the secondary button.',
       },
       {
         key: 'hero_secondary_link',
@@ -85,12 +85,11 @@ const FIELD_GROUPS: FieldGroup[] = [
     fields: [
       { key: 'stats_enabled', kind: 'switch', label: 'Show the section' },
       { key: 'stats_title', kind: 'text', label: 'Title' },
-      { key: 'stats_subtitle', kind: 'text', label: 'Subtitle' },
       {
         key: 'stats_items',
         kind: 'json',
         label: 'Metrics',
-        hint: 'JSON array: [{"label","value","suffix"}] — matched to live metrics by position.',
+        hint: 'JSON array: [{"label","value","suffix","hint"}] — matched to live metrics by position. Empty values fall back to live data.',
       },
     ],
   },
@@ -106,6 +105,12 @@ const FIELD_GROUPS: FieldGroup[] = [
         kind: 'text',
         label: 'Only these groups',
         hint: 'Comma separated. Empty means every group.',
+      },
+      {
+        key: 'models_tags',
+        kind: 'json',
+        label: 'Model badges',
+        hint: 'JSON object: {"model-name":"badge text"} — shown at the top right of the matching model card, e.g. {"deepseek-v4-pro":"Deep reasoning"}.',
       },
     ],
   },

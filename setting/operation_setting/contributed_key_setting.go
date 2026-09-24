@@ -88,9 +88,9 @@ func DefaultContributedKeyProviders() []ContributedKeyProvider {
 		{
 			Key:            "sensenova",
 			Name:           "商汤 SenseNova",
-			BaseURL:        "https://token.sensenova.cn/v1",
+			BaseURL:        "https://token.sensenova.cn/v1", // 上游 API 地址（仅供服务端调用）
 			VerifyModel:    "",
-			DocsURL:        "https://token.sensenova.cn",
+			DocsURL:        "https://www.sensenova.cn/", // 用户获取 Key 的入口（官网，不是 API 端点）
 			ChannelType:    1, // OpenAI 兼容协议
 			Enabled:        true,
 			ModelsEndpoint: "/models",

@@ -20,7 +20,6 @@ import {
   Info,
   KeyRound,
   RotateCw,
-  ShieldCheck,
   Sparkles,
   Trash2,
 } from 'lucide-react'
@@ -33,7 +32,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -88,7 +86,6 @@ export function MyContributionPanel() {
 
   const [provider, setProvider] = useState('')
   const [keyValue, setKeyValue] = useState('')
-  const [remark, setRemark] = useState('')
   const [pendingDelete, setPendingDelete] = useState<ContributedKeyItem | null>(
     null
   )
@@ -122,10 +119,8 @@ export function MyContributionPanel() {
       await addMutation.mutateAsync({
         provider: activeProvider,
         key: trimmed,
-        remark: remark.trim() || undefined,
       })
       setKeyValue('')
-      setRemark('')
     } catch {
       // 错误提示已在 mutation 中处理
     }
@@ -264,40 +259,21 @@ export function MyContributionPanel() {
             </div>
           </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='contributed-remark'>{t('Note (optional)')}</Label>
-            <Input
-              id='contributed-remark'
-              value={remark}
-              maxLength={120}
-              onChange={(event) => setRemark(event.target.value)}
-              placeholder={t('e.g. shared from my personal plan')}
-            />
-          </div>
-
-          <div className='space-y-2'>
-            <div className='flex items-center gap-2'>
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  addMutation.isPending || !activeProvider || !keyValue.trim()
-                }
-              >
-                {addMutation.isPending ? <Spinner /> : null}
-                {t('Submit & verify')}
-              </Button>
-              <span className='text-muted-foreground text-xs'>
-                {t(
-                  'The key is verified against the provider immediately after submission.'
-                )}
-              </span>
-            </div>
-            <p className='text-muted-foreground/80 flex items-start gap-1.5 text-xs leading-relaxed'>
-              <ShieldCheck className='mt-0.5 size-3.5 shrink-0' />
+          <div className='flex items-center gap-2'>
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                addMutation.isPending || !activeProvider || !keyValue.trim()
+              }
+            >
+              {addMutation.isPending ? <Spinner /> : null}
+              {t('Submit & verify')}
+            </Button>
+            <span className='text-muted-foreground text-xs'>
               {t(
-                'By submitting you agree that the key is used to serve model calls for this site. It is never shown to other users.'
+                'The key is verified against the provider immediately after submission.'
               )}
-            </p>
+            </span>
           </div>
         </div>
       </Card>
@@ -354,11 +330,6 @@ export function MyContributionPanel() {
       <Card className='gap-0 overflow-hidden py-0'>
         <div className='border-border/60 border-b px-5 py-3.5'>
           <h3 className='text-sm font-semibold'>{t('My contributed keys')}</h3>
-          <p className='text-muted-foreground mt-0.5 text-xs'>
-            {t(
-              'Unavailable keys are removed from your daily quota automatically.'
-            )}
-          </p>
         </div>
         <div className='overflow-x-auto'>
           <Table>
@@ -466,12 +437,6 @@ export function MyContributionPanel() {
           <li className='flex gap-2'>
             <span className='text-foreground font-semibold'>4.</span>
             {t(
-              'Keys are checked periodically. If a key stops working, the quota it granted is reclaimed automatically.'
-            )}
-          </li>
-          <li className='flex gap-2'>
-            <span className='text-foreground font-semibold'>5.</span>
-            {t(
               'Use the key you created on the API Keys page to call models.'
             )}
           </li>
@@ -484,9 +449,7 @@ export function MyContributionPanel() {
           if (!open) setPendingDelete(null)
         }}
         title={t('Remove this key?')}
-        desc={t(
-          'The key will stop being used for shared calls and its quota will be reclaimed.'
-        )}
+        desc={t('The key will be removed from your list.')}
         confirmText={t('Remove')}
         destructive
         isLoading={deleteMutation.isPending}
