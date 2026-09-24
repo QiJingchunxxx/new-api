@@ -55,10 +55,23 @@ fi
 EXPECTED_IMAGE=${env_image:-$CUSTOM_IMAGE}
 
 if [ "$REGISTRY" = '1' ]; then
+  # --registry 的前提是 .env 指向一个可拉取的镜像仓库地址。
+  # 如果这里不拦截，compose 会回退到 build 模式，在服务器上编译镜像（1核2G 会 OOM）。
   if [ -z "$env_image" ]; then
-    echo "警告：$ENV_FILE 里没有配置 NEW_API_IMAGE，将按本地 tag 拉取（可能失败）。" >&2
-    echo "      请在该文件里添加：NEW_API_IMAGE=ghcr.io/<你的用户名小写>/new-api:latest" >&2
+    echo "错误：$ENV_FILE 里没有配置 NEW_API_IMAGE，--registry 模式不会构建镜像。" >&2
+    echo "      请执行下面两行后重试：" >&2
+    echo "        echo 'NEW_API_IMAGE=ghcr.io/<你的 GitHub 用户名小写>/new-api:latest' >> $ENV_FILE" >&2
+    echo "        echo 'NEW_API_PULL_POLICY=always' >> $ENV_FILE" >&2
+    exit 1
   fi
+  case "$env_image" in
+    */*) ;;
+    *)
+      echo "错误：NEW_API_IMAGE='$env_image' 看起来不是镜像仓库地址（缺少 /）。" >&2
+      echo "      应形如 ghcr.io/你的用户名/new-api:latest" >&2
+      exit 1
+      ;;
+  esac
   echo "==> 从镜像仓库拉取 $EXPECTED_IMAGE（不在本机编译）"
   docker compose pull "$SERVICE"
 else

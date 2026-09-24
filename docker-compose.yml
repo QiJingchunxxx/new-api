@@ -30,8 +30,6 @@
 #
 # ⚠️  IMPORTANT: Change all default passwords before deploying to production!
 
-version: '3.4' # For compatibility with older Docker versions
-
 services:
   new-api:
     # A) 默认：本地构建的镜像；B) 服务器：由 .env 覆盖成 GHCR 镜像
