@@ -221,6 +221,39 @@ func StartXxxTask() {
 - 展示的指标必须来自真实接口。真拿不到（例如全站用量聚合）就换成本站真实可得的口径，
   **不要为了像而造假数字**；需要新数据时优先新增带缓存的公开接口，绝不每次请求都去聚合 `logs` 表。
 
+### 公开页顶栏滚动后会收缩 —— 容易被当成 bug 报上来
+
+`public-header.tsx` 用 `scrolled` 状态切换容器样式：
+
+```tsx
+scrolled ? 'max-w-[52rem] px-3 pt-3' : 'max-w-7xl px-4 pt-0 md:px-6'
+```
+
+`52rem = 832px`。一旦管理员开启了多个导航模块（首页 / 控制台 / 模型 / 排行榜 / 常见问题 / 文档 / 关于），
+832px 装不下 logo + 7 项 + 语言/主题/通知/登录，导航文字被 `truncate` 截成「主…」「控…」。
+用户的描述通常是**「往下滑动的时候这里被挤压了」**——听到这句直接来看这个 `scrolled` 分支。
+
+修复：滚动后也保持 `max-w-7xl`（只保留胶囊背景与阴影，不再收窄），并给导航项加 `whitespace-nowrap`、
+去掉 `min-w-0 truncate`。**不要**只加 nowrap 不收窄宽度，那样文字会直接溢出。
+
+### 找并清理孤立组件（大改版面后必做一次）
+
+```bash
+cd web/src
+for f in ComponentA ComponentB; do
+  printf "%-16s -> " "$f"
+  grep -rl "\b$f\b" --include=*.tsx --include=*.ts . | grep -v "__tests__" | tr '\n' ' '; echo
+done
+```
+
+**只输出自身文件名的就是孤儿**。本项目首页改版后一次清掉 13 个（`cta` / `how-it-works` / `features` /
+`gateway-card` / `feature-item` / `connection-line` / `hero-terminal-demo` / `hero-buttons` / `icon-card` /
+`scrolling-icons` / `stat-item` / `icon-mapper` / `constants`），`features/home/` 从 23 个文件降到 13 个。
+
+三条纪律：删前逐个确认；删后**再 grep 一遍**确认零残留；最后必须跑 `tsgo -b`
+（删文件后残留的 import 会直接让类型检查失败）。
+`constants.ts` 这种"没人直接 import 的常量文件"要按导出名逐个查，别只看文件名。
+
 ### 从截图推断数据口径（很有用的一招）
 
 拿到参考站点截图时，**对比两张不同时间截图的同一个数字**就能判断口径：

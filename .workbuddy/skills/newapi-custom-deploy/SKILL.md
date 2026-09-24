@@ -47,6 +47,45 @@ curl -s http://localhost:3000/api/home_landing          # 返回 JSON = 新代�
 5. 上游 `docker-build.yml` 只在**打 tag** 时触发（推 `calciumion/new-api`，fork 上会失败）；`ci.yml` 只在 PR 时触发。所以 push 到 main 不会跑出一堆失败的工作流 —— 但如果创建版本 tag 会。
 6. 「服务器上改动不见了」的两类原因：① 用的是官方镜像（镜像里根本没有源码）；② 改了代码但没重建/重拉镜像。UI 里改的配置存在数据库，所以会保留，容易造成"有的改了有的没改"的错觉。
 7. 想在服务器上构建只想临时救急时，至少加 4G swap 并停掉其它容器，但**不推荐**。
+8. **`git pull` 被「文件权限位」挡住**：Windows 开发机提交的脚本 mode 是 `100644`，
+   服务器上 `chmod +x` 后变成 `100755`，git 就认为工作区被修改，pull 报
+   `error: Your local changes to the following files would be overwritten by merge`。
+   这是本项目**最常见**的 pull 失败原因（几乎每次都在 `deploy.sh` 上撞到）。
+   诊断与修复见下面的独立小节。
+
+## 排障：`git pull` 报 "local changes would be overwritten"（最常撞到的一次）
+
+先看清是"内容差异"还是"仅权限差异"：
+
+```bash
+cd /opt/new-api
+git diff deploy.sh          # 换成报错里点名的那个文件
+```
+
+- 如果只输出 `old mode 100644` / `new mode 100755`，**没有内容改动** → 就是权限位问题，
+  用下面这一条根治（脚本保持可执行，以后不再冲突）：
+
+  ```bash
+  git config core.fileMode false
+  git pull
+  ```
+
+- 如果确实有内容差异（服务器上被人手工改过），先备份再决定：
+
+  ```bash
+  cp deploy.sh /root/deploy.sh.server.bak
+  git stash push -m "server-local" && git pull        # 内容不重要就 git checkout -- deploy.sh
+  ```
+
+**注意区分「服务器代码」和「容器里跑的代码」**：服务器工作区落后不代表服务是旧的 ——
+镜像是从 GHCR 拉的，只要那次 Actions 构建成功，容器里就是最新代码。
+反过来，pull 成功也不代表服务更新了，还要 `./deploy.sh --registry` 让它拉新镜像重建。
+判断"到底跑没跑上新代码"用**本分支特有的接口**，别猜：
+
+```bash
+curl -s http://localhost:3000/api/landing_stats | head -c 200   # 较新分支才有
+curl -s http://localhost:3000/api/home_landing  | head -c 200   # 早期分支就有
+```
 
 ## 排障：`./deploy.sh` 报「未知参数：--registry」
 

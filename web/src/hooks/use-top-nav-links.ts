@@ -67,16 +67,21 @@ export function useTopNavLinks(): TopNavLink[] {
     links.push({ title: t('Home'), href: '/' })
   }
 
-  // Console -> /dashboard (new console path)
-  if (modules?.console !== false) {
-    links.push({ title: t('Console'), href: '/dashboard' })
-  }
-
-  // Pricing
+  // Pricing —— 站点主入口，排在导航第一位
   const pricing = modules?.pricing
   if (pricing && typeof pricing === 'object' && pricing.enabled) {
     const requiresAuth = pricing.requireAuth && !isAuthed
     links.push({ title: t('Model Square'), href: '/pricing', requiresAuth })
+  }
+
+  // Help / FAQ guide
+  if (modules?.help !== false) {
+    links.push({ title: t('FAQ'), href: '/faq' })
+  }
+
+  // Console -> /dashboard（用户面板）
+  if (modules?.console !== false) {
+    links.push({ title: t('User Panel'), href: '/dashboard' })
   }
 
   // Rankings
@@ -86,11 +91,6 @@ export function useTopNavLinks(): TopNavLink[] {
     links.push({ title: t('Rankings'), href: '/rankings', requiresAuth })
   }
 
-  // Help / FAQ guide
-  if (modules?.help !== false) {
-    links.push({ title: t('FAQ'), href: '/faq' })
-  }
-
   // Docs (supports external links)
   if (modules?.docs !== false) {
     if (docsLink) {
@@ -98,11 +98,6 @@ export function useTopNavLinks(): TopNavLink[] {
     } else {
       links.push({ title: t('Docs'), href: '/docs' })
     }
-  }
-
-  // About
-  if (modules?.about !== false) {
-    links.push({ title: t('About'), href: '/about' })
   }
 
   return links

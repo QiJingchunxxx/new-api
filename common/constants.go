@@ -12,7 +12,8 @@ import (
 
 var StartTime = time.Now().Unix() // unit: second
 var Version = "v0.0.0"            // this hard coding will be replaced automatically when building, no need to manually change
-var SystemName = "New API"
+// SystemName 站点名默认值：二次开发站点不沿用上游项目名，请在后台上改成自己的品牌名。
+var SystemName = "AI Gateway"
 var Footer = ""
 var Logo = ""
 var TopUpLink = ""

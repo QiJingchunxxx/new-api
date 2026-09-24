@@ -119,6 +119,14 @@ func defaultContributedKeyProvidersJSON() string {
 	return string(data)
 }
 
+// contributedLegacyDocsURLs 早期版本把上游 API 端点误当成了「获取 Key 的入口」下发给用户。
+// 命中这些旧值时直接返回官网，管理员不需要再去后台改一遍 JSON。
+var contributedLegacyDocsURLs = map[string]string{
+	"https://token.sensenova.cn":    "https://www.sensenova.cn/",
+	"https://token.sensenova.cn/":   "https://www.sensenova.cn/",
+	"https://token.sensenova.cn/v1": "https://www.sensenova.cn/",
+}
+
 // GetContributedKeyProviders 解析当前供应商配置，解析失败时回退到内置列表。
 func GetContributedKeyProviders() []ContributedKeyProvider {
 	raw := strings.TrimSpace(contributedKeySetting.Providers)
@@ -128,6 +136,11 @@ func GetContributedKeyProviders() []ContributedKeyProvider {
 	var providers []ContributedKeyProvider
 	if err := json.Unmarshal([]byte(raw), &providers); err != nil || len(providers) == 0 {
 		return DefaultContributedKeyProviders()
+	}
+	for i := range providers {
+		if fixed, ok := contributedLegacyDocsURLs[strings.TrimSpace(providers[i].DocsURL)]; ok {
+			providers[i].DocsURL = fixed
+		}
 	}
 	return providers
 }

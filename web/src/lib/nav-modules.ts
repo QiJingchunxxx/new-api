@@ -36,13 +36,15 @@ export type HeaderNavModules = {
 }
 
 const DEFAULT_HEADER_NAV_MODULES: HeaderNavModules = {
-  home: true,
+  // 默认只保留「模型广场 / 常见问题 / 用户面板」三项：
+  // 首页由左侧 logo 承担，排行榜、文档、关于对站点访客没有价值，默认关闭。
+  home: false,
   console: true,
   pricing: { enabled: true, requireAuth: false },
-  rankings: { enabled: true, requireAuth: false },
+  rankings: { enabled: false, requireAuth: false },
   help: true,
-  docs: true,
-  about: true,
+  docs: false,
+  about: false,
 }
 
 const DEFAULTS: Record<HeaderNavModule, ModuleAccess> = {

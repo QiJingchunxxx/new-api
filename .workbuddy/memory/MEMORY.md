@@ -23,6 +23,10 @@
 - 审美要求高，不接受框架默认样式；落地页要接近大厂官网质感。
 - 文案必须中英双语：i18n key 用英文原文，`zh.json` 补中文。**前端露出英文 = bug**。
 - 管理端展示的数字/状态必须来自真实数据，不要造假数据占位。
+- **页面上不出现上游项目品牌**：`new-api` / `New API` / `QuantumNous` / `docs.newapi.pro`
+  的署名、外链、默认站点名、文档入口一律去掉（页脚只保留本站自己的信息）。
+  例外：第三方客户端配置格式的 `id: 'new-api'` 是协议标识符，不能改。
+- 站点名默认值用中性的 `AI Gateway`，用户会去后台改成自己的品牌名。
 
 ## 技术约定
 - 配置项：`setting/operation_setting/xxx_setting.go` + `config.GlobalConfig.Register`；

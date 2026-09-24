@@ -51,7 +51,8 @@ export function SystemBrand(props: SystemBrandProps) {
   const { logo } = useSystemConfig()
 
   const variant = props.variant ?? 'sidebar'
-  const name = status?.system_name || props.defaultName || 'New API'
+  // 站点名只来自后台配置；未配置时留空，不回退到上游项目名。
+  const name = status?.system_name || props.defaultName || ''
   const version =
     status?.version || props.defaultVersion || t('Unknown version')
 

@@ -26,16 +26,7 @@ import { useTheme } from '@/context/theme-provider'
 import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
-import {
-  CTA,
-  Community,
-  Faq,
-  Features,
-  Hero,
-  HowItWorks,
-  ModelGallery,
-  Stats,
-} from './components'
+import { Community, Faq, Hero, ModelGallery, Stats } from './components'
 import { useHomeLanding, useHomePageContent, useLandingVisitReporter } from './hooks'
 
 export function Home() {
@@ -156,8 +147,6 @@ export function Home() {
           tags={landing?.models.tags}
         />
       ) : null}
-      <HowItWorks />
-      <Features />
       {showFaq ? (
         <Faq
           title={landing?.faq.title}
@@ -173,7 +162,6 @@ export function Home() {
           qrCodes={landing?.community.qr_codes}
         />
       ) : null}
-      <CTA isAuthenticated={isAuthenticated} />
       <Footer />
     </PublicLayout>
   )

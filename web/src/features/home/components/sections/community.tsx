@@ -41,8 +41,8 @@ export function Community(props: CommunityProps) {
   const { t } = useTranslation()
   const { status } = useStatus()
 
-  const docsUrl =
-    (status?.docs_link as string | undefined) || 'https://docs.newapi.pro'
+  // 默认文档入口只使用后台配置的地址，不再回退到上游项目的文档站。
+  const docsUrl = (status?.docs_link as string | undefined) || ''
 
   const configuredLinks = (props.links ?? []).filter(
     (link) => link.href?.trim() && link.label?.trim()
@@ -50,7 +50,9 @@ export function Community(props: CommunityProps) {
   const links: HomeLandingLink[] =
     configuredLinks.length > 0
       ? configuredLinks
-      : [{ label: t('Documentation'), href: docsUrl }]
+      : docsUrl
+        ? [{ label: t('Documentation'), href: docsUrl }]
+        : []
 
   const qrCodes = (props.qrCodes ?? []).filter((item) => item.image?.trim())
 

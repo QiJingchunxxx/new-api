@@ -48,8 +48,8 @@ export function Faq() {
   const landing = useHomeLanding()
   const { status } = useStatus()
 
-  const docsUrl =
-    (status?.docs_link as string | undefined) || 'https://docs.newapi.pro'
+  // 文档入口只使用后台配置的地址，不再回退到上游项目的文档站。
+  const docsUrl = (status?.docs_link as string | undefined) || ''
 
   const defaults = useMemo(() => getDefaultFaqItems(t), [t])
   const items =
@@ -144,17 +144,23 @@ export function Faq() {
                 )}
               </p>
               <div className='mt-4 flex flex-col gap-2'>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  className='w-full justify-between'
-                  render={
-                    <a href={docsUrl} target='_blank' rel='noopener noreferrer' />
-                  }
-                >
-                  {t('Docs')}
-                  <BookOpen className='size-3.5' />
-                </Button>
+                {docsUrl ? (
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='w-full justify-between'
+                    render={
+                      <a
+                        href={docsUrl}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      />
+                    }
+                  >
+                    {t('Docs')}
+                    <BookOpen className='size-3.5' />
+                  </Button>
+                ) : null}
                 <Button
                   size='sm'
                   variant='ghost'

@@ -146,11 +146,7 @@ export function Hero(props: HeroProps) {
           className='landing-animate-fade-up mt-8 flex flex-wrap items-center justify-center gap-3 opacity-0'
           style={{ animationDelay: '140ms' }}
         >
-          <HeroAction
-            label={props.isAuthenticated ? t('Go to Dashboard') : primaryText}
-            to={props.isAuthenticated ? '/dashboard' : primaryLink}
-            withIcon
-          />
+          <HeroAction label={primaryText} to={primaryLink} withIcon />
           {secondaryText ? (
             <HeroAction
               label={secondaryText}
